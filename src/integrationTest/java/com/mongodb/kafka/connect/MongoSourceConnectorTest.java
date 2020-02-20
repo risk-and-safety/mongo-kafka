@@ -320,6 +320,7 @@ public class MongoSourceConnectorTest extends MongoKafkaTestCase {
         sourceProperties.put(MongoSourceConfig.DATABASE_CONFIG, coll.getNamespace().getDatabaseName());
         sourceProperties.put(MongoSourceConfig.COLLECTION_CONFIG, coll.getNamespace().getCollectionName());
         sourceProperties.put(MongoSourceConfig.PUBLISH_FULL_DOCUMENT_ONLY_CONFIG, "true");
+        sourceProperties.put(MongoSourceConfig.KEY_FROM_MONGODB_OID_CONFIG, "true");
         sourceProperties.put(MongoSourceConfig.COPY_EXISTING_CONFIG, "true");
         addSourceConnector(sourceProperties);
 

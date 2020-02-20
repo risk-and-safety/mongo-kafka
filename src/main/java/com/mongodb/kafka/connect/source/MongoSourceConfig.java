@@ -72,6 +72,11 @@ public class MongoSourceConfig extends AbstractConfig {
     private static final String BATCH_SIZE_DOC =  "The cursor batch size.";
     private static final int BATCH_SIZE_DEFAULT = 0;
 
+    public static final String KEY_FROM_MONGODB_OID_CONFIG = "key.from.mongodb.oid";
+    private static final String KEY_FROM_MONGODB_OID_DISPLAY = "Use MongoDb's oid string as topic key";
+    private static final String KEY_FROM_MONGODB_OID_DOC = "Use MongoDb's ObjectId string as the Key value in a kafka topic ";
+    private static final boolean KEY_FROM_MONGODB_OID_DEFAULT = false;
+
     public static final String PUBLISH_FULL_DOCUMENT_ONLY_CONFIG = "publish.full.document.only";
     private static final String PUBLISH_FULL_DOCUMENT_ONLY_DISPLAY = "Publish only the `fullDocument` field";
     private static final String PUBLISH_FULL_DOCUMENT_ONLY_DOC =  "Only publish the actual changed document rather than the full change "
@@ -290,6 +295,16 @@ public class MongoSourceConfig extends AbstractConfig {
                 ++orderInGroup,
                 Width.MEDIUM,
                 BATCH_SIZE_DISPLAY);
+
+        configDef.define(KEY_FROM_MONGODB_OID_CONFIG,
+                Type.BOOLEAN,
+                KEY_FROM_MONGODB_OID_DEFAULT,
+                Importance.HIGH,
+                KEY_FROM_MONGODB_OID_DOC,
+                group,
+                ++orderInGroup,
+                Width.MEDIUM,
+                KEY_FROM_MONGODB_OID_DISPLAY);
 
         configDef.define(PUBLISH_FULL_DOCUMENT_ONLY_CONFIG,
                 Type.BOOLEAN,

@@ -20,6 +20,7 @@ import static com.mongodb.kafka.connect.source.MongoSourceConfig.COLLECTION_CONF
 import static com.mongodb.kafka.connect.source.MongoSourceConfig.CONNECTION_URI_CONFIG;
 import static com.mongodb.kafka.connect.source.MongoSourceConfig.COPY_EXISTING_CONFIG;
 import static com.mongodb.kafka.connect.source.MongoSourceConfig.DATABASE_CONFIG;
+import static com.mongodb.kafka.connect.source.MongoSourceConfig.KEY_FROM_MONGODB_OID_CONFIG;
 import static com.mongodb.kafka.connect.source.MongoSourceConfig.POLL_AWAIT_TIME_MS_CONFIG;
 import static com.mongodb.kafka.connect.source.MongoSourceConfig.POLL_MAX_BATCH_SIZE_CONFIG;
 import static com.mongodb.kafka.connect.source.MongoSourceConfig.PUBLISH_FULL_DOCUMENT_ONLY_CONFIG;
@@ -145,6 +146,7 @@ public class MongoSourceTask extends SourceTask {
         LOGGER.debug("Polling Start: {}", time.milliseconds());
         List<SourceRecord> sourceRecords = new ArrayList<>();
         boolean publishFullDocumentOnly = sourceConfig.getBoolean(PUBLISH_FULL_DOCUMENT_ONLY_CONFIG);
+        boolean keyFromMongodbOid = sourceConfig.getBoolean(KEY_FROM_MONGODB_OID_CONFIG);
         int maxBatchSize = sourceConfig.getInt(POLL_MAX_BATCH_SIZE_CONFIG);
         long nextUpdate = startPoll + sourceConfig.getLong(POLL_AWAIT_TIME_MS_CONFIG);
         String prefix = sourceConfig.getString(TOPIC_PREFIX_CONFIG);
@@ -182,9 +184,23 @@ public class MongoSourceTask extends SourceTask {
                     jsonDocument = Optional.of(changeStreamDocument.toJson());
                 }
 
+                LOGGER.info("changeStreamDocument: [{}]", changeStreamDocument);
+                LOGGER.info("jsonDocument: [{}]", jsonDocument);
                 jsonDocument.ifPresent((json) -> {
                     LOGGER.trace("Adding {} to {}", json, topicName);
-                    String keyJson = new BsonDocument("_id", changeStreamDocument.get("_id")).toJson();
+
+                    String keyJson = "";
+                    if (keyFromMongodbOid) {
+                        BsonDocument documentKey = changeStreamDocument.getDocument("documentKey");
+                        try {
+                            keyJson = documentKey.get("_id").asString().getValue();
+                        } catch (Exception e) {
+                            keyJson = documentKey.getObjectId("_id").getValue().toString();
+                        }
+                    } else {
+                        keyJson = new BsonDocument("_id", changeStreamDocument.get("_id")).toJson();
+                    }
+
                     sourceRecords.add(new SourceRecord(partition, sourceOffset, topicName, Schema.STRING_SCHEMA, keyJson,
                             Schema.STRING_SCHEMA, json));
                 });
